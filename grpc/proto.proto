@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "Auction/grpc/proto";
+
+message Empty {}
+
+message Bid {
+    string node = 1;
+    int32 amount = 2;
+}
+
+service ClientService {
+    rpc SendBid(Bid) returns (Empty);
+}
