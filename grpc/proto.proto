@@ -3,11 +3,22 @@ option go_package = "Auction/grpc/proto";
 
 message Empty {}
 
+enum Status {
+    SUCCESS = 0;
+    FAIL = 1;
+    EXCEPTION = 2;
+}
+
+message Acknowledgement {
+    Status status = 1;
+}
+
 message Bid {
     string node = 1;
     int32 amount = 2;
 }
 
 service ClientService {
-    rpc SendBid(Bid) returns (Empty);
+    rpc SendBid(Bid) returns (Acknowledgement);
+    rpc Result(Empty) returns (Bid);
 }

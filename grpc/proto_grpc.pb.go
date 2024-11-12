@@ -20,13 +20,15 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	ClientService_SendBid_FullMethodName = "/ClientService/SendBid"
+	ClientService_Result_FullMethodName  = "/ClientService/Result"
 )
 
 // ClientServiceClient is the client API for ClientService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClientServiceClient interface {
-	SendBid(ctx context.Context, in *Bid, opts ...grpc.CallOption) (*Empty, error)
+	SendBid(ctx context.Context, in *Bid, opts ...grpc.CallOption) (*Acknowledgement, error)
+	Result(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Bid, error)
 }
 
 type clientServiceClient struct {
@@ -37,10 +39,20 @@ func NewClientServiceClient(cc grpc.ClientConnInterface) ClientServiceClient {
 	return &clientServiceClient{cc}
 }
 
-func (c *clientServiceClient) SendBid(ctx context.Context, in *Bid, opts ...grpc.CallOption) (*Empty, error) {
+func (c *clientServiceClient) SendBid(ctx context.Context, in *Bid, opts ...grpc.CallOption) (*Acknowledgement, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Empty)
+	out := new(Acknowledgement)
 	err := c.cc.Invoke(ctx, ClientService_SendBid_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clientServiceClient) Result(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Bid, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Bid)
+	err := c.cc.Invoke(ctx, ClientService_Result_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +63,8 @@ func (c *clientServiceClient) SendBid(ctx context.Context, in *Bid, opts ...grpc
 // All implementations must embed UnimplementedClientServiceServer
 // for forward compatibility.
 type ClientServiceServer interface {
-	SendBid(context.Context, *Bid) (*Empty, error)
+	SendBid(context.Context, *Bid) (*Acknowledgement, error)
+	Result(context.Context, *Empty) (*Bid, error)
 	mustEmbedUnimplementedClientServiceServer()
 }
 
@@ -62,8 +75,11 @@ type ClientServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedClientServiceServer struct{}
 
-func (UnimplementedClientServiceServer) SendBid(context.Context, *Bid) (*Empty, error) {
+func (UnimplementedClientServiceServer) SendBid(context.Context, *Bid) (*Acknowledgement, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendBid not implemented")
+}
+func (UnimplementedClientServiceServer) Result(context.Context, *Empty) (*Bid, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Result not implemented")
 }
 func (UnimplementedClientServiceServer) mustEmbedUnimplementedClientServiceServer() {}
 func (UnimplementedClientServiceServer) testEmbeddedByValue()                       {}
@@ -104,6 +120,24 @@ func _ClientService_SendBid_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClientService_Result_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClientServiceServer).Result(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ClientService_Result_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClientServiceServer).Result(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ClientService_ServiceDesc is the grpc.ServiceDesc for ClientService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var ClientService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendBid",
 			Handler:    _ClientService_SendBid_Handler,
+		},
+		{
+			MethodName: "Result",
+			Handler:    _ClientService_Result_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

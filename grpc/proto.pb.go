@@ -20,6 +20,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type Status int32
+
+const (
+	Status_SUCCESS   Status = 0
+	Status_FAIL      Status = 1
+	Status_EXCEPTION Status = 2
+)
+
+// Enum value maps for Status.
+var (
+	Status_name = map[int32]string{
+		0: "SUCCESS",
+		1: "FAIL",
+		2: "EXCEPTION",
+	}
+	Status_value = map[string]int32{
+		"SUCCESS":   0,
+		"FAIL":      1,
+		"EXCEPTION": 2,
+	}
+)
+
+func (x Status) Enum() *Status {
+	p := new(Status)
+	*p = x
+	return p
+}
+
+func (x Status) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Status) Descriptor() protoreflect.EnumDescriptor {
+	return file_grpc_proto_proto_enumTypes[0].Descriptor()
+}
+
+func (Status) Type() protoreflect.EnumType {
+	return &file_grpc_proto_proto_enumTypes[0]
+}
+
+func (x Status) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Status.Descriptor instead.
+func (Status) EnumDescriptor() ([]byte, []int) {
+	return file_grpc_proto_proto_rawDescGZIP(), []int{0}
+}
+
 type Empty struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -58,6 +107,53 @@ func (*Empty) Descriptor() ([]byte, []int) {
 	return file_grpc_proto_proto_rawDescGZIP(), []int{0}
 }
 
+type Acknowledgement struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status Status `protobuf:"varint,1,opt,name=status,proto3,enum=Status" json:"status,omitempty"`
+}
+
+func (x *Acknowledgement) Reset() {
+	*x = Acknowledgement{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_grpc_proto_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Acknowledgement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Acknowledgement) ProtoMessage() {}
+
+func (x *Acknowledgement) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_proto_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Acknowledgement.ProtoReflect.Descriptor instead.
+func (*Acknowledgement) Descriptor() ([]byte, []int) {
+	return file_grpc_proto_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Acknowledgement) GetStatus() Status {
+	if x != nil {
+		return x.Status
+	}
+	return Status_SUCCESS
+}
+
 type Bid struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -70,7 +166,7 @@ type Bid struct {
 func (x *Bid) Reset() {
 	*x = Bid{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_grpc_proto_proto_msgTypes[1]
+		mi := &file_grpc_proto_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -83,7 +179,7 @@ func (x *Bid) String() string {
 func (*Bid) ProtoMessage() {}
 
 func (x *Bid) ProtoReflect() protoreflect.Message {
-	mi := &file_grpc_proto_proto_msgTypes[1]
+	mi := &file_grpc_proto_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -96,7 +192,7 @@ func (x *Bid) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Bid.ProtoReflect.Descriptor instead.
 func (*Bid) Descriptor() ([]byte, []int) {
-	return file_grpc_proto_proto_rawDescGZIP(), []int{1}
+	return file_grpc_proto_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Bid) GetNode() string {
@@ -117,15 +213,23 @@ var File_grpc_proto_proto protoreflect.FileDescriptor
 
 var file_grpc_proto_proto_rawDesc = []byte{
 	0x0a, 0x10, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x31, 0x0a, 0x03, 0x42,
-	0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x32, 0x28,
-	0x0a, 0x0d, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
-	0x17, 0x0a, 0x07, 0x53, 0x65, 0x6e, 0x64, 0x42, 0x69, 0x64, 0x12, 0x04, 0x2e, 0x42, 0x69, 0x64,
-	0x1a, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x42, 0x14, 0x5a, 0x12, 0x41, 0x75, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x6f, 0x22, 0x07, 0x0a, 0x05, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x32, 0x0a, 0x0f, 0x41,
+	0x63, 0x6b, 0x6e, 0x6f, 0x77, 0x6c, 0x65, 0x64, 0x67, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x1f,
+	0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x07,
+	0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22,
+	0x31, 0x0a, 0x03, 0x42, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d,
+	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75,
+	0x6e, 0x74, 0x2a, 0x2e, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x0b, 0x0a, 0x07,
+	0x53, 0x55, 0x43, 0x43, 0x45, 0x53, 0x53, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x46, 0x41, 0x49,
+	0x4c, 0x10, 0x01, 0x12, 0x0d, 0x0a, 0x09, 0x45, 0x58, 0x43, 0x45, 0x50, 0x54, 0x49, 0x4f, 0x4e,
+	0x10, 0x02, 0x32, 0x4a, 0x0a, 0x0d, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x53, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x12, 0x21, 0x0a, 0x07, 0x53, 0x65, 0x6e, 0x64, 0x42, 0x69, 0x64, 0x12, 0x04,
+	0x2e, 0x42, 0x69, 0x64, 0x1a, 0x10, 0x2e, 0x41, 0x63, 0x6b, 0x6e, 0x6f, 0x77, 0x6c, 0x65, 0x64,
+	0x67, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x12, 0x06, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x04, 0x2e, 0x42, 0x69, 0x64, 0x42, 0x14,
+	0x5a, 0x12, 0x41, 0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -140,19 +244,25 @@ func file_grpc_proto_proto_rawDescGZIP() []byte {
 	return file_grpc_proto_proto_rawDescData
 }
 
-var file_grpc_proto_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_grpc_proto_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_grpc_proto_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_grpc_proto_proto_goTypes = []any{
-	(*Empty)(nil), // 0: Empty
-	(*Bid)(nil),   // 1: Bid
+	(Status)(0),             // 0: Status
+	(*Empty)(nil),           // 1: Empty
+	(*Acknowledgement)(nil), // 2: Acknowledgement
+	(*Bid)(nil),             // 3: Bid
 }
 var file_grpc_proto_proto_depIdxs = []int32{
-	1, // 0: ClientService.SendBid:input_type -> Bid
-	0, // 1: ClientService.SendBid:output_type -> Empty
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: Acknowledgement.status:type_name -> Status
+	3, // 1: ClientService.SendBid:input_type -> Bid
+	1, // 2: ClientService.Result:input_type -> Empty
+	2, // 3: ClientService.SendBid:output_type -> Acknowledgement
+	3, // 4: ClientService.Result:output_type -> Bid
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_grpc_proto_proto_init() }
@@ -174,6 +284,18 @@ func file_grpc_proto_proto_init() {
 			}
 		}
 		file_grpc_proto_proto_msgTypes[1].Exporter = func(v any, i int) any {
+			switch v := v.(*Acknowledgement); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_grpc_proto_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*Bid); i {
 			case 0:
 				return &v.state
@@ -191,13 +313,14 @@ func file_grpc_proto_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_grpc_proto_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_grpc_proto_proto_goTypes,
 		DependencyIndexes: file_grpc_proto_proto_depIdxs,
+		EnumInfos:         file_grpc_proto_proto_enumTypes,
 		MessageInfos:      file_grpc_proto_proto_msgTypes,
 	}.Build()
 	File_grpc_proto_proto = out.File
