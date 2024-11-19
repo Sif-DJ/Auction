@@ -18,7 +18,12 @@ message Bid {
     int32 amount = 2;
 }
 
-service ClientService {
+message Outcome{
+    Bid winingbid = 1;
+    bool auctionFinished = 2;
+}
+
+service AuctionService {
     rpc SendBid(Bid) returns (Acknowledgement);
-    rpc Result(Empty) returns (Bid);
+    rpc Result(Empty) returns (Outcome);
 }
