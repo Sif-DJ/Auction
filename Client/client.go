@@ -24,13 +24,10 @@ func main() {
 	clnt := &clientstr{
 		servernodesString: []string{"5053", "5052", "5051", "5050"},
 	}
-	clientName := fmt.Sprint(rand.Intn(256))
+	clientName := "Client" + fmt.Sprint(rand.Intn(256))
+	log.Println("You are", clientName)
 	clnt.StartNode()
 	outcome := &proto.Outcome{
-		Winingbid: &proto.Bid{
-			Node:   "Server",
-			Amount: 0,
-		},
 		AuctionFinished: false,
 	}
 	reader := bufio.NewReader(os.Stdin)
@@ -54,29 +51,27 @@ func main() {
 				log.Println("Bad input, try again")
 				continue
 			}
-			endValue := int32(value)             // Convert to Int32
+			endValue := int32(value) // Convert to Int32
+			bid := &proto.Bid{
+				Node:   clientName,
+				Amount: endValue,
+			}
 			ack, err := clnt.connection.SendBid( // Send current bid and receive an acknowledgement
 				context.Background(),
-				&proto.Bid{
-					Node:   clientName,
-					Amount: endValue,
-				},
+				bid,
 			)
 			if err != nil { // Maybe there is a wrong client, so it is time to connect to another
 				clnt.StartNode()
 				ack, _ = clnt.connection.SendBid( // Send current bid to new client and receive an acknowledgement
 					context.Background(),
-					&proto.Bid{
-						Node:   clientName,
-						Amount: endValue,
-					},
+					bid,
 				)
 			}
 			if ack.Status == proto.Status_SUCCESS {
-				log.Println("Succesfully bidded ", endValue)
+				log.Println("Succesfully bidded", endValue)
 			}
 			if ack.Status == proto.Status_FAIL {
-				log.Print("Bidded lower than the current highest")
+				log.Print("Bidded lower than or equal to the current highest or the auction is closed")
 			}
 		}
 	}
@@ -96,5 +91,5 @@ func (clnt *clientstr) StartNode() {
 			return
 		}
 	}
-
+	log.Fatalln("Could not connect to any server")
 }

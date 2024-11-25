@@ -25,6 +25,7 @@ type AuctionServiceServer struct {
 	servernodes       []proto.AuctionServiceClient
 	servernodesString []string
 	serverIndex       int
+	serverTime        int
 }
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 		isLeader:          false,
 		servernodesString: []string{"5050", "5051", "5052", "5053"},
 		servernodes:       make([]proto.AuctionServiceClient, 4),
+		serverTime:        0,
 	}
 	var input string
 	reader := bufio.NewReader(os.Stdin)
@@ -48,6 +50,12 @@ func main() {
 	srv.ConnectToNodes()
 	go srv.healthcheck()
 
+	for srv.serverTime < 100 { // 1 minute and 40 seconds to bid before closing of auction
+		srv.serverTime++
+		time.Sleep(1 * time.Second)
+	}
+
+	srv.auctionFinished = true
 	for input != "EXIT" {
 		read, _ = reader.ReadString('\n')
 		input, _, _ = strings.Cut(read, "\r\n")
@@ -102,7 +110,7 @@ func (srv *AuctionServiceServer) startServer(address string) {
 func (srv *AuctionServiceServer) SendBid(ctx context.Context, bid *proto.Bid) (*proto.Acknowledgement, error) {
 	if srv.isLeader {
 		log.Println("Bidder " + bid.Node + " bidded " + strconv.Itoa(int(bid.Amount)))
-		if bid.Amount > srv.winingBid.Amount {
+		if bid.Amount > srv.winingBid.Amount && !srv.auctionFinished {
 			log.Println("Bidder bidded more than the previous winning bid " + fmt.Sprint(srv.winingBid.Amount))
 			srv.winingBid = *bid
 			return &proto.Acknowledgement{
