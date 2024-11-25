@@ -43,7 +43,7 @@ outcome
 outcome
 2024/11/25 17:22:07 Auction finished and the winning bid is Client68 with a bid of 30000
 outcome         
-2024/11/25 17:23:22 Could not connect to any server //what happens when all auction servers are down
+2024/11/25 17:23:22 Could not connect to any server     //what happens when all auction servers are down
 exit status 1
 
 Log Client68:
@@ -63,5 +63,5 @@ outcome
 outcome
 2024/11/25 17:22:27 Auction finished and the winning bid is Client68 with a bid of 30000
 outcome
-2024/11/25 17:23:25 Could not connect to any server
+2024/11/25 17:23:25 Could not connect to any server     //what happens when all auction servers are down
 exit status 1
