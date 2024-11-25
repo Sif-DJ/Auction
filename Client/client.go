@@ -18,7 +18,7 @@ func main() {
 		log.Println("SendBid error: ", err)
 	}
 	outcome, _ := client.Result(context.Background(), &proto.Empty{})
-	log.Println(" is auction done" + strconv.FormatBool(outcome.AuctionFinished))
+	log.Println("is auction done? [" + strconv.FormatBool(outcome.AuctionFinished) + "]")
 
 }
 
