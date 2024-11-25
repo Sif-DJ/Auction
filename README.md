@@ -1,4 +1,8 @@
 # Auction
+A timeunit in this program is 1 second
+
+
+
  
 ## To start a servernode:
 

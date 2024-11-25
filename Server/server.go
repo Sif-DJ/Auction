@@ -72,7 +72,7 @@ func (srv *AuctionServiceServer) ConnectToNodes() {
 		for err != nil {
 			conn, err = grpc.NewClient("localhost:"+elem, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		}
-		log.Println("Connected to " + elem)
+		//log.Println("Connected to " + elem)
 		srv.servernodes[i] = (proto.NewAuctionServiceClient(conn))
 	}
 
@@ -101,7 +101,7 @@ func (srv *AuctionServiceServer) startServer(address string) {
 		log.Fatalln("Exception Error")
 	}
 	proto.RegisterAuctionServiceServer(grpcServer, srv)
-	log.Println(address + " registered server")
+	//log.Println(address + " registered server")
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("Exception Error after Registration")
 	}

@@ -1,0 +1,67 @@
+Log server 5050:
+go run .\server.go
+5050
+2024/11/25 17:20:08 I AM THE LEADER NOW
+2024/11/25 17:20:59 Bidder Client68 bidded 500
+2024/11/25 17:20:59 Bidder bidded more than the previous winning bid 0
+2024/11/25 17:21:02 Bidder Client51 bidded 43
+2024/11/25 17:21:13 Bidder Client51 bidded 8492
+2024/11/25 17:21:13 Bidder bidded more than the previous winning bid 500
+2024/11/25 17:21:19 Bidder Client68 bidded 6000
+2024/11/25 17:21:24 Bidder Client68 bidded 10000
+2024/11/25 17:21:24 Bidder bidded more than the previous winning bid 8492
+exit status 0xc000013a      //here is a simulated crash of the leader happens right before 2024/11/25 17:21:29
+
+Log Server 5051:
+5051
+2024/11/25 17:21:29 I AM THE LEADER NOW
+2024/11/25 17:21:39 Bidder Client51 bidded 20000
+2024/11/25 17:21:39 Bidder bidded more than the previous winning bid 10000
+2024/11/25 17:21:52 Bidder Client68 bidded 30000
+2024/11/25 17:21:52 Bidder bidded more than the previous winning bid 20000
+exit
+EXIT        //auction has ended and all servers EXIT happens right before 2024/11/25 17:23:22
+
+
+Log server 5052:
+go run .\server.go
+5052
+exit status 0xc000013a      //simulated crash of server clients are connected to happens right before 2024/11/25 17:22:07
+
+Log Client51:
+2024/11/25 17:20:57 You are Client51
+43
+2024/11/25 17:21:02 Bidded lower than or equal to the current highest or the auction is closed
+outcome
+2024/11/25 17:21:05 Highest bid is Client68 with a bid of 500
+8492
+2024/11/25 17:21:13 Succesfully bidded 8492
+outcome
+2024/11/25 17:21:34 Highest bid is Client68 with a bid of 10000
+20000
+2024/11/25 17:21:39 Succesfully bidded 20000
+outcome
+2024/11/25 17:22:07 Auction finished and the winning bid is Client68 with a bid of 30000
+outcome         
+2024/11/25 17:23:22 Could not connect to any server //what happens when all auction servers are down
+exit status 1
+
+Log Client68:
+2024/11/25 17:20:51 You are Client68
+500
+2024/11/25 17:20:59 Succesfully bidded 500
+6000
+2024/11/25 17:21:19 Bidded lower than or equal to the current highest or the auction is closed
+outcome
+2024/11/25 17:21:21 Highest bid is Client51 with a bid of 8492
+10000
+2024/11/25 17:21:24 Succesfully bidded 10000
+outcome
+2024/11/25 17:21:43 Highest bid is Client51 with a bid of 20000
+30000
+2024/11/25 17:21:52 Succesfully bidded 30000
+outcome
+2024/11/25 17:22:27 Auction finished and the winning bid is Client68 with a bid of 30000
+outcome
+2024/11/25 17:23:25 Could not connect to any server
+exit status 1
