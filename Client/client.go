@@ -2,30 +2,99 @@ package main
 
 import (
 	proto "Auction/grpc"
+	"bufio"
 	"context"
+	"fmt"
 	"log"
+	"math/rand"
+	"os"
 	"strconv"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type clientstr struct {
+	servernodesString []string
+	connection        proto.AuctionServiceClient
+}
+
 func main() {
-	address := "5050"
-	client := StartNode(address)
-	_, err := client.SendBid(context.Background(), &proto.Bid{Node: address, Amount: 500})
-	if err != nil {
-		log.Println("SendBid error: ", err)
+	clnt := &clientstr{
+		servernodesString: []string{"5053", "5052", "5051", "5050"},
 	}
-	outcome, _ := client.Result(context.Background(), &proto.Empty{})
-	log.Println("is auction done? [" + strconv.FormatBool(outcome.AuctionFinished) + "]")
+	clientName := fmt.Sprint(rand.Intn(256))
+	clnt.StartNode()
+	outcome := &proto.Outcome{
+		Winingbid: &proto.Bid{
+			Node:   "Server",
+			Amount: 0,
+		},
+		AuctionFinished: false,
+	}
+	reader := bufio.NewReader(os.Stdin)
+	for !outcome.AuctionFinished {
+		read, _ := reader.ReadString('\n')       // Get Read
+		input, _, _ := strings.Cut(read, "\r\n") // Cut off weird extras
+		if input == "outcome" {
+			outcome, err := clnt.connection.Result(context.Background(), &proto.Empty{}) //tries to get the current outcome
+			if err != nil {                                                              //if it fails to get the outcome because server is down
+				clnt.StartNode()
+				outcome, _ = clnt.connection.Result(context.Background(), &proto.Empty{}) //tries to get the current outcome after finding a new server
+			}
+			if outcome.GetAuctionFinished() {
+				log.Println("Auction finished and the winning bid is " + outcome.GetWiningbid().GetNode() + " with a bid of " + strconv.Itoa(int(outcome.GetWiningbid().GetAmount())))
+			} else {
+				log.Println("Highest bid is " + outcome.GetWiningbid().GetNode() + " with a bid of " + strconv.Itoa(int(outcome.GetWiningbid().GetAmount())))
+			}
+		} else {
+			value, err := strconv.Atoi(input) // Convert to Int
+			if err != nil {
+				log.Println("Bad input, try again")
+				continue
+			}
+			endValue := int32(value)             // Convert to Int32
+			ack, err := clnt.connection.SendBid( // Send current bid and receive an acknowledgement
+				context.Background(),
+				&proto.Bid{
+					Node:   clientName,
+					Amount: endValue,
+				},
+			)
+			if err != nil { // Maybe there is a wrong client, so it is time to connect to another
+				clnt.StartNode()
+				ack, _ = clnt.connection.SendBid( // Send current bid to new client and receive an acknowledgement
+					context.Background(),
+					&proto.Bid{
+						Node:   clientName,
+						Amount: endValue,
+					},
+				)
+			}
+			if ack.Status == proto.Status_SUCCESS {
+				log.Println("Succesfully bidded ", endValue)
+			}
+			if ack.Status == proto.Status_FAIL {
+				log.Print("Bidded lower than the current highest")
+			}
+		}
+	}
 
 }
 
-func StartNode(address string) proto.AuctionServiceClient {
-	conn, err := grpc.NewClient("localhost:"+address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Exception Error")
+func (clnt *clientstr) StartNode() {
+	for _, elem := range clnt.servernodesString {
+		conn, err := grpc.NewClient("localhost:"+elem, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("Exception Error")
+		}
+		_connection := proto.NewAuctionServiceClient(conn)
+		_, err = _connection.HealthCheck(context.Background(), &proto.Empty{})
+		if err == nil {
+			clnt.connection = _connection
+			return
+		}
 	}
-	return proto.NewAuctionServiceClient(conn)
+
 }

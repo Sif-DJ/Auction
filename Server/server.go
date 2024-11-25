@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type AuctionServiceServer struct {
@@ -23,6 +24,7 @@ type AuctionServiceServer struct {
 	currentLeader     proto.AuctionServiceClient
 	servernodes       []proto.AuctionServiceClient
 	servernodesString []string
+	serverIndex       int
 }
 
 func main() {
@@ -31,26 +33,54 @@ func main() {
 		auctionFinished:   false,
 		isLeader:          false,
 		servernodesString: []string{"5050", "5051", "5052", "5053"},
+		servernodes:       make([]proto.AuctionServiceClient, 4),
 	}
 	var input string
 	reader := bufio.NewReader(os.Stdin)
 	read, _ := reader.ReadString('\n')
 	input, _, _ = strings.Cut(read, "\r\n")
+	for i, elem := range srv.servernodesString {
+		if elem == input {
+			srv.serverIndex = i
+		}
+	}
 	go srv.startServer(input)
+	srv.ConnectToNodes()
 	go srv.healthcheck()
 
-	for {
-
+	for input != "EXIT" {
+		read, _ = reader.ReadString('\n')
+		input, _, _ = strings.Cut(read, "\r\n")
 	}
 }
 
+func (srv *AuctionServiceServer) ConnectToNodes() {
+	for i, elem := range srv.servernodesString {
+		if srv.serverIndex == i {
+			srv.servernodes[i] = nil
+			continue
+		}
+		conn, err := grpc.NewClient("localhost:"+elem, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		for err != nil {
+			conn, err = grpc.NewClient("localhost:"+elem, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		}
+		log.Println("Connected to " + elem)
+		srv.servernodes[i] = (proto.NewAuctionServiceClient(conn))
+	}
+
+	srv.selectleader()
+}
+
+// Local health check of other servers
 func (srv *AuctionServiceServer) healthcheck() {
 	for {
 		time.Sleep(1 * time.Second)
 		if !srv.isLeader {
-			_, err := srv.currentLeader.SendBid(context.Background(), &proto.Bid{Node: "Server 5050", Amount: 0})
+			outcome, err := srv.currentLeader.HealthCheck(context.Background(), &proto.Empty{})
 			if err != nil {
 				srv.selectleader()
+			} else {
+				srv.winingBid = *outcome.GetWiningbid()
 			}
 		}
 	}
@@ -70,30 +100,66 @@ func (srv *AuctionServiceServer) startServer(address string) {
 }
 
 func (srv *AuctionServiceServer) SendBid(ctx context.Context, bid *proto.Bid) (*proto.Acknowledgement, error) {
-
-	log.Println("Bidder " + bid.Node + " bidded " + strconv.Itoa(int(bid.Amount)))
-	if bid.Amount > srv.winingBid.Amount {
-		log.Println("Bidder bidded more than the previous winning bid " + fmt.Sprint(srv.winingBid.Amount))
-		srv.winingBid = *bid
+	if srv.isLeader {
+		log.Println("Bidder " + bid.Node + " bidded " + strconv.Itoa(int(bid.Amount)))
+		if bid.Amount > srv.winingBid.Amount {
+			log.Println("Bidder bidded more than the previous winning bid " + fmt.Sprint(srv.winingBid.Amount))
+			srv.winingBid = *bid
+			return &proto.Acknowledgement{
+				Status: proto.Status_SUCCESS,
+			}, nil
+		}
 		return &proto.Acknowledgement{
-			Status: proto.Status_SUCCESS,
+			Status: proto.Status_FAIL,
 		}, nil
+	} else {
+		ackno, err := srv.currentLeader.SendBid(ctx, bid)
+		if err != nil {
+			srv.selectleader()
+			ackno, _ = srv.currentLeader.SendBid(ctx, bid)
+		}
+		return ackno, nil
 	}
-	return &proto.Acknowledgement{
-		Status: proto.Status_FAIL,
-	}, nil
 }
 
 func (srv *AuctionServiceServer) Result(ctx context.Context, _ *proto.Empty) (*proto.Outcome, error) {
+	if srv.isLeader {
+		return &proto.Outcome{
+			Winingbid:       &srv.winingBid,
+			AuctionFinished: srv.auctionFinished,
+		}, nil
+	} else {
+		outcome, err := srv.currentLeader.Result(ctx, &proto.Empty{})
+		if err != nil {
+			srv.selectleader()
+			outcome, _ = srv.currentLeader.Result(ctx, &proto.Empty{})
+		}
+		srv.winingBid = *outcome.GetWiningbid()
+		return outcome, nil
+	}
 
+}
+
+func (srv *AuctionServiceServer) selectleader() {
+	for i, elem := range srv.servernodes {
+		if i == srv.serverIndex {
+			srv.isLeader = true
+			log.Println("I AM THE LEADER NOW")
+			return
+		}
+		_, err := elem.HealthCheck(context.Background(), &proto.Empty{})
+		if err == nil {
+			srv.currentLeader = elem
+			return
+		}
+	}
+}
+
+// GRPC for either getting the current winning bid from Leader or to register a crash
+func (srv *AuctionServiceServer) HealthCheck(ctx context.Context, _ *proto.Empty) (*proto.Outcome, error) {
+	//log.Println("HealthCheck called")
 	return &proto.Outcome{
 		Winingbid:       &srv.winingBid,
 		AuctionFinished: srv.auctionFinished,
 	}, nil
-}
-
-func (srv *AuctionServiceServer) selectleader() {
-	for _, elem := range srv.servernodes {
-		_, err := elem.SendBid(context.Background(), &proto.Bid{Node: "Server", Amount: 0})
-	}
 }

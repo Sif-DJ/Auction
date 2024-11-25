@@ -26,4 +26,5 @@ message Outcome{
 service AuctionService {
     rpc SendBid(Bid) returns (Acknowledgement);
     rpc Result(Empty) returns (Outcome);
+    rpc HealthCheck(Empty) returns (Outcome);
 }

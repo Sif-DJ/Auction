@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AuctionService_SendBid_FullMethodName = "/AuctionService/SendBid"
-	AuctionService_Result_FullMethodName  = "/AuctionService/Result"
+	AuctionService_SendBid_FullMethodName     = "/AuctionService/SendBid"
+	AuctionService_Result_FullMethodName      = "/AuctionService/Result"
+	AuctionService_HealthCheck_FullMethodName = "/AuctionService/HealthCheck"
 )
 
 // AuctionServiceClient is the client API for AuctionService service.
@@ -29,6 +30,7 @@ const (
 type AuctionServiceClient interface {
 	SendBid(ctx context.Context, in *Bid, opts ...grpc.CallOption) (*Acknowledgement, error)
 	Result(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Outcome, error)
+	HealthCheck(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Outcome, error)
 }
 
 type auctionServiceClient struct {
@@ -59,12 +61,23 @@ func (c *auctionServiceClient) Result(ctx context.Context, in *Empty, opts ...gr
 	return out, nil
 }
 
+func (c *auctionServiceClient) HealthCheck(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Outcome, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Outcome)
+	err := c.cc.Invoke(ctx, AuctionService_HealthCheck_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuctionServiceServer is the server API for AuctionService service.
 // All implementations must embed UnimplementedAuctionServiceServer
 // for forward compatibility.
 type AuctionServiceServer interface {
 	SendBid(context.Context, *Bid) (*Acknowledgement, error)
 	Result(context.Context, *Empty) (*Outcome, error)
+	HealthCheck(context.Context, *Empty) (*Outcome, error)
 	mustEmbedUnimplementedAuctionServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedAuctionServiceServer) SendBid(context.Context, *Bid) (*Acknow
 }
 func (UnimplementedAuctionServiceServer) Result(context.Context, *Empty) (*Outcome, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Result not implemented")
+}
+func (UnimplementedAuctionServiceServer) HealthCheck(context.Context, *Empty) (*Outcome, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HealthCheck not implemented")
 }
 func (UnimplementedAuctionServiceServer) mustEmbedUnimplementedAuctionServiceServer() {}
 func (UnimplementedAuctionServiceServer) testEmbeddedByValue()                        {}
@@ -138,6 +154,24 @@ func _AuctionService_Result_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuctionService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionServiceServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionService_HealthCheck_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionServiceServer).HealthCheck(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuctionService_ServiceDesc is the grpc.ServiceDesc for AuctionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var AuctionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Result",
 			Handler:    _AuctionService_Result_Handler,
+		},
+		{
+			MethodName: "HealthCheck",
+			Handler:    _AuctionService_HealthCheck_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
